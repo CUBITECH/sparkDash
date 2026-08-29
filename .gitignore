@@ -12,7 +12,7 @@ config/gpu-memory.json
 config/gpu-memory.json.*
 config/bench-exports/
 *.log
-.DS_Store
+.DS_Store/mod
 docs/
 mockups/
 AGENTS.md
@@ -24,3 +24,4 @@ HANDOFF.md
 HANDOFF-HERMES.md
 handoff.md
 test/
+.idea
