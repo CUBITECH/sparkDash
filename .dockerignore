@@ -8,5 +8,12 @@ dist
 .DS_Store
 node_modules/
 
+# Native/platform build outputs must not inflate the Docker context
+**/bin/
+**/obj/
+**/__pycache__/
+**/artifacts/
+**/DerivedData/
+
 # Don't skip server/ or config/ in Docker build
 # They are needed at runtime

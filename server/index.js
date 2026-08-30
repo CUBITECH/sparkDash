@@ -21,6 +21,7 @@ import { showcaseManager } from "./collectors/ShowcaseManager.js";
 import { llmProbeHost } from "./collectors/llmHost.js";
 import { llmDaily } from "./collectors/LlmDaily.js";
 import { compareSemver, getLatestRelease } from "./collectors/HermesReleases.js";
+import { createStatusSummary } from "./status/statusSummary.js";
 
 dotenv.config();
 
@@ -141,6 +142,13 @@ function clientKey(req) {
 }
 
 // ─── REST API ────────────────────────────────────────────
+// Compact, read-only data contract for native companion surfaces.
+// It deliberately excludes targets, credentials, and every control action.
+app.get("/api/status/summary", (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.json(createStatusSummary(orderedSnapshots()));
+});
+
 // Never return SSH passwords in any response
 app.get("/api/sparks", (_req, res) => {
   res.json({ sparks: registry.publicSparks });
@@ -1277,7 +1285,10 @@ const indexHtml = path.join(distDir, "index.html");
 app.use(express.static(distDir));
 
 // ─── SPA fallback (Express v5 wildcard) ───────────────────
-app.get("*splat", (_req, res) => {
+app.get("*splat", (req, res) => {
+  if (req.path === "/api" || req.path.startsWith("/api/")) {
+    return res.status(404).json({ error: "API route not found" });
+  }
   if (!fs.existsSync(indexHtml)) {
     return res
       .status(503)

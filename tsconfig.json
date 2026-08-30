@@ -12,13 +12,11 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    // Allow `import Foo from "./Foo.tsx"` (IDE-default style). Requires noEmit
-    // (already set) — the bundler (Vite) still strips extensions at build time.
     "allowImportingTsExtensions": true,
     "paths": {
       "@/*": ["./src/*"]
     }
   },
   "include": ["src"],
-  "exclude": ["node_modules", "dist", "server", "config"]
+  "exclude": ["node_modules", "dist", "server", "config", "src/sw.ts"]
 }

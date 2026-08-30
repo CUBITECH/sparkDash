@@ -36,6 +36,8 @@ It also supports **non-Spark units**: any Linux machine with an NVIDIA GPU (e.g.
 - [Tailnet monitoring](#tailnet-monitoring)
 - [Full changelog](./CHANGELOG.md)
 - [Quick start](#quick-start)
+- [Windows and macOS companion surfaces](./docs/platform-companions.md)
+- [Freely placeable Windows desktop tile](./docs/windows-desktop-tile.md)
 - [Architecture](#architecture)
 - [Tech stack](#tech-stack)
 - [Repository layout](#repository-layout)
@@ -84,6 +86,7 @@ Full history: [CHANGELOG.md](./CHANGELOG.md)
 | **Secrets** | SSH passwords AES-256-GCM encrypted; never in `sparks.json` or API responses |
 | **Docker-first** | Single privileged container for host metrics; prod and dev Compose files |
 | **Hot config** | Add / edit / remove / reorder Sparks from the UI with no process restart |
+| **Native companions** | Freely placeable Windows desktop tile plus a macOS WidgetKit desktop/menu-bar companion; see [platform companions](./docs/platform-companions.md) and the [Windows desktop tile](./docs/windows-desktop-tile.md) |
 
 ---
 
@@ -338,6 +341,7 @@ sparkDash/
 | Method | Path | Purpose |
 |--------|------|---------|
 | GET | `/api/sparks` | List Sparks (passwords redacted) |
+| GET | `/api/status/summary` | Compact read-only status for native companion surfaces |
 | POST | `/api/sparks` | Add Spark and start its monitor |
 | PATCH | `/api/sparks/:id` | Update Spark (hot-swap config) |
 | DELETE | `/api/sparks/:id` | Remove Spark and drain monitor |
@@ -465,6 +469,11 @@ Choice is stored in `localStorage`.
 | `npm run dev:client` | Vite only |
 | `npm run build` | Production frontend → `dist/` |
 | `npm run typecheck` | `tsc --noEmit` |
+| `npm run verify:pwa` | Verify the standard installable PWA artifacts |
+| `npm run verify:platform-companions` | Verify PWA, Windows desktop tile, and macOS companion source artifacts |
+| `npm run test:windows-desktop-tile` | Test the loopback status client, tile parser, and settings persistence |
+| `npm run build:windows-desktop-tile` | Compile the native WPF desktop tile for x64 |
+| `npm run install:windows-desktop-tile` | Publish, install, and start the freely placeable Windows tile |
 | `npm start` | Production server (`node server/index.js`) |
 | `npm run docker:up` | `docker compose up -d` |
 | `npm run docker:prod` | Same as `docker:up` |

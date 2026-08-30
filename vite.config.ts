@@ -1,8 +1,34 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { VitePWA } from "vite-plugin-pwa";
+import { VitePWA, type ManifestOptions } from "vite-plugin-pwa";
 import path from "path";
+
+const manifest: Partial<ManifestOptions> = {
+  id: "/",
+  name: "sparkDash",
+  short_name: "sparkDash",
+  description: "Multi-DGX Spark Monitoring Dashboard",
+  lang: "en",
+  start_url: "/",
+  scope: "/",
+  display: "standalone",
+  background_color: "#0a0a0a",
+  theme_color: "#0a0a0a",
+  icons: [
+    {
+      src: "/pwa-192x192.png",
+      sizes: "192x192",
+      type: "image/png",
+    },
+    {
+      src: "/pwa-512x512.png",
+      sizes: "512x512",
+      type: "image/png",
+      purpose: "any maskable",
+    },
+  ],
+};
 
 export default defineConfig({
   plugins: [
@@ -10,34 +36,14 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: "script",
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
+        globPatterns: ["**/*.{js,css,html,png,svg,json,webmanifest}"],
         navigateFallbackDenylist: [/^\/api(?:\/|$)/, /^\/ws(?:\/|$)/],
       },
-      manifest: {
-        id: "/",
-        name: "sparkDash",
-        short_name: "sparkDash",
-        description: "Multi-DGX Spark Monitoring Dashboard",
-        lang: "en",
-        start_url: "/",
-        scope: "/",
-        display: "standalone",
-        background_color: "#0a0a0a",
-        theme_color: "#0a0a0a",
-        icons: [
-          {
-            src: "/pwa-192x192.png",
-            sizes: "192x192",
-            type: "image/png",
-          },
-          {
-            src: "/pwa-512x512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "any maskable",
-          },
-        ],
-      },
+      manifest,
     }),
   ],
   resolve: {

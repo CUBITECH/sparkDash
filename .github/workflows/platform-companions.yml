@@ -1,0 +1,110 @@
+name: Platform companions
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/platform-companions.yml"
+      - "package*.json"
+      - "tsconfig*.json"
+      - "vite.config.ts"
+      - "server/index.js"
+      - "server/status/**"
+      - "platforms/macos/**"
+      - "platforms/windows/SparkDashDesktopTile/**"
+      - "docs/platform-companions.md"
+      - "docs/windows-desktop-tile.md"
+      - "scripts/verify-pwa.mjs"
+      - "scripts/verify-platform-cleanup.mjs"
+      - "scripts/verify-windows-desktop-tile.mjs"
+      - "scripts/verify-macos-companion.mjs"
+  pull_request:
+    paths:
+      - ".github/workflows/platform-companions.yml"
+      - "package*.json"
+      - "tsconfig*.json"
+      - "vite.config.ts"
+      - "server/index.js"
+      - "server/status/**"
+      - "platforms/macos/**"
+      - "platforms/windows/SparkDashDesktopTile/**"
+      - "docs/platform-companions.md"
+      - "docs/windows-desktop-tile.md"
+      - "scripts/verify-pwa.mjs"
+      - "scripts/verify-platform-cleanup.mjs"
+      - "scripts/verify-windows-desktop-tile.mjs"
+      - "scripts/verify-macos-companion.mjs"
+
+jobs:
+  web-and-source-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: node --test server/status/__tests__/*.test.js
+      - run: npm run verify:platform-companions
+      - run: node scripts/verify-platform-cleanup.mjs
+
+  windows-desktop-tile:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Restore locked desktop-tile dependencies
+        working-directory: platforms/windows/SparkDashDesktopTile
+        run: dotnet restore SparkDashDesktopTile.sln -p:Platform=x64 -p:RestoreLockedMode=true
+      - name: Test desktop-tile status and settings contracts
+        working-directory: platforms/windows/SparkDashDesktopTile
+        run: |
+          dotnet test SparkDash.StatusCore.Tests/SparkDash.StatusCore.Tests.csproj --configuration Release --no-restore
+          dotnet test SparkDash.DesktopTile.Tests/SparkDash.DesktopTile.Tests.csproj --configuration Release --no-restore
+      - name: Build x64 desktop tile
+        working-directory: platforms/windows/SparkDashDesktopTile
+        run: dotnet build SparkDash.DesktopTile/SparkDash.DesktopTile.csproj --configuration Release -p:Platform=x64 --no-restore
+      - name: Verify desktop-tile and cleanup source artifacts
+        run: |
+          node scripts/verify-windows-desktop-tile.mjs
+          node scripts/verify-platform-cleanup.mjs
+      - name: Publish self-contained x64 desktop tile
+        working-directory: platforms/windows/SparkDashDesktopTile
+        run: >-
+          powershell -ExecutionPolicy Bypass
+          -File tools/publish_desktop_tile.ps1
+          -Architecture x64
+          -OutputDirectory "$env:RUNNER_TEMP\sparkdash-desktop-tile-x64"
+      - name: Build and publish ARM64 desktop tile
+        working-directory: platforms/windows/SparkDashDesktopTile
+        run: |
+          dotnet restore SparkDashDesktopTile.sln -p:Platform=ARM64 -p:RestoreLockedMode=true
+          dotnet build SparkDash.DesktopTile/SparkDash.DesktopTile.csproj --configuration Release -p:Platform=ARM64 --no-restore
+          powershell -ExecutionPolicy Bypass -File tools/publish_desktop_tile.ps1 -Architecture arm64 -OutputDirectory "$env:RUNNER_TEMP\sparkdash-desktop-tile-arm64"
+
+  macos-companion:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Xcode project
+        working-directory: platforms/macos/SparkDashCompanion
+        run: xcodegen generate
+      - name: Build and test macOS menu-bar app and WidgetKit desktop extension
+        working-directory: platforms/macos/SparkDashCompanion
+        run: >-
+          xcodebuild
+          -project SparkDashCompanion.xcodeproj
+          -scheme SparkDashCompanion
+          -destination 'platform=macOS'
+          -derivedDataPath "$RUNNER_TEMP/SparkDashDerivedData"
+          CODE_SIGNING_ALLOWED=NO
+          test

@@ -1,0 +1,6 @@
+SparkDashCompanion.xcodeproj/
+Config/App-Info.plist
+Config/Widget-Info.plist
+DerivedData/
+*.xcuserstate
+xcuserdata/
